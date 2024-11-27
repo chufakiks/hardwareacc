@@ -22,9 +22,9 @@ class Accelerator extends Module {
   //var index = 0.U
   val x = RegInit(0.U(5.W))
   val y = RegInit(0.U(5.W))
-  val index = RegInit(0.U(16.W))
 
-  val blackNeighbours = false.B
+
+  val blackNeighbours = RegInit(false.B)
 
   //default values
   io.address := 0.U
@@ -32,19 +32,22 @@ class Accelerator extends Module {
   io.done := false.B
   io.dataWrite := 0.U
 
+  val index = RegInit(20.U(6.W))
+
   switch(stateReg) {
     is(idle) {
       when(io.start) {
-        var count = 20.U
-        when(count < 59.U) {
-          io.address := count - 20.U
-          registers(count) := io.dataRead
-          count = count + 1.U
-        }
-      }
-        .otherwise{
+        when(index < 60.U) {
+          io.address := index - 20.U
+          registers(index) := io.dataRead
+          index := index + 1.U
+          x := index + 2.U
+          //printf(p"[IDLE] Address: ${io.address}, Count: $index\n")
+          stateReg := idle
+        }.otherwise{
           stateReg := pixelCheck
         }
+      }
     }
     is(pixelCheck) {
       val borderPixel = (x === 0.U) || (y === 0.U) || (x === 19.U) || (y === 19.U)
