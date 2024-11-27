@@ -11,17 +11,13 @@ class Accelerator extends Module {
     val writeEnable = Output(Bool ())
     val dataWrite = Output(UInt (32.W))
 
-
-
   })
   val idle :: state :: pixelCheck :: write :: increment :: load :: done :: Nil = Enum (7)
   val stateReg = RegInit(idle)
   val registers = Reg(Vec (60, UInt (16.W)))
-  //var x = 0.U
-  //var y = 0.U
-  //var index = 0.U
-  val x = RegInit(0.U(5.W))
-  val y = RegInit(0.U(5.W))
+
+  val x = RegInit(0.U(6.W))
+  val y = RegInit(0.U(6.W))
 
   val blackNeighbours = RegInit(false.B)
 
@@ -42,44 +38,33 @@ class Accelerator extends Module {
     is(state) {
       when(index < 60.U) {
         io.address := index - 20.U
-        //registers(index) := io.dataRead
+        registers(index) := io.dataRead
         index := index + 1.U
-        x := index + 2.U
-
-      }.otherwise {
+      }
+      when (index === 60.U){
         stateReg := pixelCheck
       }
     }
     is(pixelCheck) {
-      val borderPixel = (x === 0.U) || (y === 0.U) || (x === 19.U) || (y === 19.U)
-      val blackPixel = (registers(x+y*20.U) === 0.U)
       blackNeighbours := false.B
-      when(borderPixel || blackPixel) {
+      when(((x === 0.U) || (y === 0.U) || (x === 19.U) || (y === 19.U)) || (registers(x) === 0.U)) {
         blackNeighbours := true.B
-      }
-        .otherwise{
-          val leftNeighbour = (x-1.U)+y*20.U
-          val rightNeighbour = (x+1.U)+y*20.U
-          val upperNeighbour = x+(y-1.U)*20.U
-          val bottomNeighbour = x+(y+1.U)*20.U
-          when(registers(leftNeighbour) === 0.U) {
+      }.otherwise{
+          when(registers(x+19.U) === 0.U) {
             blackNeighbours := true.B
+          }.elsewhen(registers(x+21.U) === 0.U){
+              blackNeighbours := true.B
+          }.elsewhen(registers(x) === 0.U){
+              blackNeighbours := true.B
+          }.elsewhen(registers(x+40.U) === 0.U){
+              blackNeighbours := true.B
           }
-            .elsewhen(registers(rightNeighbour) === 0.U){
-              blackNeighbours := true.B
-            }
-            .elsewhen(registers(upperNeighbour) === 0.U){
-              blackNeighbours := true.B
-            }
-            .elsewhen(registers(bottomNeighbour) === 0.U){
-              blackNeighbours := true.B
-            }
-        }
-        stateReg := write
+      }
+      stateReg := write
     }
     is(write) {
-      io.address := x+y*20.U + 400.U
       io.writeEnable := true.B
+      io.address := x+(y*20.U) + 400.U
       when(blackNeighbours) {
         io.dataWrite := 0.U
       }
@@ -89,23 +74,20 @@ class Accelerator extends Module {
       stateReg := increment
     }
     is(increment) {
-      when(y > 19.U) {
+      when(y === 20.U) {
         stateReg := done
-      }
-      when(x > 19.U) {
+      }.elsewhen (x === 20.U) {
         x := 0.U
         y := y+1.U
         index := 0.U
         stateReg := load
+      }.otherwise {
+        x := x + 1.U
+        stateReg := pixelCheck
       }
-        .otherwise {
-          x := x + 1.U
-          stateReg := pixelCheck
-        }
-
     }
     is(load) {
-      when (index > 19.U){
+      when (index < 20.U){
         registers(index) := registers(index+20.U)
         registers(index+20.U) := registers(index+40.U)
         io.address := (y+1.U)*20.U + index
