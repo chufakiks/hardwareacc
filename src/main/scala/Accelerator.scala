@@ -37,13 +37,13 @@ class Accelerator extends Module {
     }
     is(pixelCheck) {
       val borderPixel = (x === 0.U) || (y === 0.U) || (x === 19.U) || (y === 19.U)
-      val blackPixel = registers(x+y*20) === 0.U
+      val blackPixel = registers(x+y*20.U) === 0.U
       when(borderPixel || blackPixel) {
         blackNeighbours = true.B
       }
         .otherwise{
-          val leftNeighbour = (x-1.U)+y*20
-          val rightNeighbour = (x+1.U)+y*20
+          val leftNeighbour = (x-1.U)+y*20.U
+          val rightNeighbour = (x+1.U)+y*20.U
           val upperNeighbour = (x+(y-1.U)*20.U)
           val bottomNeighbour = (x+(y+1.U)*20.U)
           when(registers(leftNeighbour) === 0.U) {
@@ -95,7 +95,7 @@ class Accelerator extends Module {
         registers(i) == reg1
       }
         .elsewhen(i < y * 20.U + 40.U) {
-          val reg2 = registers(i + 2*20.U) // finished here <3
+          val reg2 = registers(i + 2.U*20.U) // finished here <3
           registers(i) == reg2
         }
         .elsewhen(i < y * 20.U + 60.U){
