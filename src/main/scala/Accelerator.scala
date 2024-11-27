@@ -80,7 +80,7 @@ class Accelerator extends Module {
         y=y+1.U
       }
         .otherwise {
-          x = x + 1.U
+          x = x + 1.U // hej
         }
       when(y > 19.U) {
         stateReg := done
