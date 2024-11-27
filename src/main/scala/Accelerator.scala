@@ -19,6 +19,7 @@ class Accelerator extends Module {
   val registers = Reg(Vec (60, UInt (16.W)))
   var x = 0.U
   var y = 0.U
+  var index = 0.U
   var blackNeighbours = false.B
 
   //default values
@@ -81,30 +82,25 @@ class Accelerator extends Module {
         y=y+1.U
       }
         .otherwise {
-          x = x + 1.U
+          x = x + 1.U // hej
         }
       when(y > 19.U) {
         stateReg := done
       }
         .otherwise{
+          index = 0.U
           stateReg := load
         }
     }
     is(load) {
-      var i = y * 20.U
-      when(i < y * 20.U + 20.U) {
-        val reg1 = registers(i + 20.U)
-        registers(i) == reg1
+      when (index < 20.U){
+        registers(index) == registers(index+20.U)
+        registers(index+20.U) == registers(index+40.U)
+        io.address := (y+1.U)*20.U + index
+        registers(index+40.U) == io.dataRead
+      } .otherwise{
+        stateReg := pixelCheck
       }
-        .elsewhen(i < y * 20.U + 40.U) {
-          val reg2 = registers(i + 2.U*20.U) // finished here <3
-          registers(i) == reg2
-        }
-        .elsewhen(i < y * 20.U + 60.U){
-          io.address := i + 20.U
-          val reg3 = io.dataRead
-          registers(i) == reg3
-        }
     }
     is(done) {
       io.done := true.B
