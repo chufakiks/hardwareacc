@@ -16,10 +16,12 @@ class Accelerator extends Module {
   })
   val idle :: pixelCheck :: write :: increment :: load :: done :: Nil = Enum (6)
   val stateReg = RegInit(idle)
-  val registers = Vec(60, RegInit(0.U(16.W)))
+  val registers = Reg(Vec (60, UInt (16.W)))
   var x = 0.U
   var y = 0.U
   var blackNeighbours = false.B
+
+  //default values
 
   switch(stateReg) {
     is(idle) {
