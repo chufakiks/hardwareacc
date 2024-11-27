@@ -89,7 +89,7 @@ class Accelerator extends Module {
         }
     }
     is(load) {
-      var i = y*20.U
+      var i = y * 20.U
       when(i < y * 20.U + 20.U) {
         val reg1 = registers(i + 20.U)
         registers(i) == reg1
@@ -97,11 +97,11 @@ class Accelerator extends Module {
         .elsewhen(i < y * 20.U + 40.U) {
           val reg2 = registers(i + 2*20.U) // finished here <3
           registers(i) == reg2
-
         }
-        .otherwise {
+        .elsewhen(i < y * 20.U + 60.U){
+          io.address := i + 20.U
           val reg3 = io.dataRead
-
+          registers(i) == reg3
         }
     }
     is(done) {
