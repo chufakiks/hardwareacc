@@ -12,7 +12,7 @@ class Accelerator extends Module {
     val dataWrite = Output(UInt (32.W))
 
   })
-  val idle :: state :: pixelCheck :: increment :: load :: done :: Nil = Enum (6)
+  val idle :: state :: pixelCheck  :: load :: done :: Nil = Enum (5)
   val stateReg = RegInit(idle)
   val registers = Reg(Vec (60, UInt (16.W)))
 
@@ -45,38 +45,35 @@ class Accelerator extends Module {
       }
     }
     is(pixelCheck) {
-      io.writeEnable := true.B
-      io.address := x+(y*20.U) + 400.U
-      when(((x === 0.U) || (y === 0.U) || (x === 19.U) || (y === 19.U)) || (registers(x) === 0.U)) {
-        io.dataWrite := 0.U
-      }.otherwise{
-          when(registers(x+19.U) === 0.U) {
-            io.dataWrite := 0.U
-          }.elsewhen(registers(x+21.U) === 0.U){
-            io.dataWrite := 0.U
-          }.elsewhen(registers(x) === 0.U){
-            io.dataWrite := 0.U
-          }.elsewhen(registers(x+40.U) === 0.U){
-            io.dataWrite := 0.U
-          }.otherwise  {
-            io.dataWrite := 255.U
-          }
-      }
-      stateReg := increment
-    }
-    is(increment) {
       when(y === 20.U) {
         stateReg := done
-      }.elsewhen (x === 20.U) {
+      }.elsewhen(x === 20.U) {
         x := 0.U
-        y := y+1.U
+        y := y + 1.U
         index := 0.U
         stateReg := load
       }.otherwise {
+        io.writeEnable := true.B
+        io.address := x + (y * 20.U) + 400.U
+        when(((x === 0.U) || (y === 0.U) || (x === 19.U) || (y === 19.U)) || (registers(x) === 0.U)) {
+          io.dataWrite := 0.U
+        }.otherwise {
+          when(registers(x + 19.U) === 0.U) {
+            io.dataWrite := 0.U
+          }.elsewhen(registers(x + 21.U) === 0.U) {
+            io.dataWrite := 0.U
+          }.elsewhen(registers(x) === 0.U) {
+            io.dataWrite := 0.U
+          }.elsewhen(registers(x + 40.U) === 0.U) {
+            io.dataWrite := 0.U
+          }.otherwise {
+            io.dataWrite := 255.U
+          }
+        }
         x := x + 1.U
-        stateReg := pixelCheck
       }
-    }
+     }
+
     is(load) {
       when (index < 20.U){
         registers(index) := registers(index+20.U)
