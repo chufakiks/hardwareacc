@@ -52,7 +52,7 @@ class Accelerator extends Module {
             .elsewhen(registers(rightNeighbour) === 0.U){
               blackNeighbours = true.B
             }
-            .elsewhen(registers(rightNeighbour) === 0.U){
+            .elsewhen(registers(upperNeighbour) === 0.U){
               blackNeighbours = true.B
             }
             .elsewhen(registers(bottomNeighbour) === 0.U){
